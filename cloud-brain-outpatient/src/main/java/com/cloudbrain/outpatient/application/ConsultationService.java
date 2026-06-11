@@ -33,7 +33,7 @@ public class ConsultationService {
         eventPublisher.publish(new ConsultationStartedEvent(
                 consultation.getId(),
                 consultation.getDoctorId(),
-                consultation.getPatientInfo().patientId()));
+                consultation.getPatientInfo().getPatientId()));
     }
 
     @Transactional

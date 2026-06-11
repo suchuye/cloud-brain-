@@ -1,0 +1,37 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: cloud-brain-outpatient
+  datasource:
+    url: jdbc:mysql://mysql:3306/cloud_brain_outpatient?useUnicode=true&characterEncoding=utf8mb4
+    username: root
+    password: ${MYSQL_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  elasticsearch:
+    uris: http://elasticsearch:9200
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+    openfeign:
+      client:
+        config:
+          order-routing:
+            url: http://cloud-brain-order-routing:8086
+            connect-timeout: 3000
+            read-timeout: 5000
+  kafka:
+    bootstrap-servers: kafka:9092
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  tracing:
+    sampling:
+      probability: 1.0

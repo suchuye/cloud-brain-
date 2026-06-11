@@ -1,0 +1,25 @@
+package com.cloudbrain.orderrouting.interfaces.rest;
+
+import com.cloudbrain.orderrouting.application.OrderRoutingService;
+import com.cloudbrain.orderrouting.dto.SubmitOrderRequest;
+import com.cloudbrain.orderrouting.dto.SubmitOrderResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
+
+    private final OrderRoutingService orderRoutingService;
+
+    public OrderController(OrderRoutingService orderRoutingService) {
+        this.orderRoutingService = orderRoutingService;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<SubmitOrderResponse> submitOrder(@RequestBody SubmitOrderRequest request) {
+        return ResponseEntity.ok(orderRoutingService.submitOrder(request));
+    }
+}

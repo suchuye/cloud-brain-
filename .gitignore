@@ -1,0 +1,15 @@
+target/
+*.class
+*.jar
+*.war
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+*.log
+*.swp
+.DS_Store
+nacos/
+elasticsearch-8.16.0/

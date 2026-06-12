@@ -7,8 +7,8 @@
     <QueuePanel
       :patients="store.queue"
       :activeId="store.current?.id"
+      :consulting="!!store.current"
       :loading="store.loading"
-      @select="store.selectPatient"
       @call-next="handleCallNext"
     />
 
@@ -81,6 +81,10 @@ let pollTimer
 function showToast(msg) { toastRef.value?.show(msg) }
 
 async function handleCallNext() {
+  if (store.current) {
+    showToast('请先结束当前就诊')
+    return
+  }
   const patient = await store.callNextPatient()
   if (patient) showToast(`已叫号 #${patient.queueNumber} ${patient.patientName}`)
   else showToast('当前无候诊患者')

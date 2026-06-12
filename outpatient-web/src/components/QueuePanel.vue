@@ -10,7 +10,6 @@
         v-for="p in patients" :key="p.id"
         class="queue-item"
         :class="{ active: p.id === activeId }"
-        @click="$emit('select', p)"
       >
         <div class="item-top">
           <span class="patient-name">
@@ -28,16 +27,22 @@
     </div>
 
     <div class="panel-footer">
-      <button class="call-btn" @click="$emit('call-next')">
-        📢 叫号
+      <button
+        class="call-btn"
+        :class="{ disabled: consulting }"
+        :disabled="consulting"
+        @click="$emit('call-next')"
+      >
+        {{ consulting ? '⏳ 就诊中...' : '📢 叫号' }}
       </button>
+      <p class="call-hint" v-if="consulting">请先结束当前患者</p>
     </div>
   </section>
 </template>
 
 <script setup>
-defineProps({ patients: Array, activeId: String, loading: Boolean })
-defineEmits(['select', 'call-next'])
+defineProps({ patients: Array, activeId: String, consulting: Boolean, loading: Boolean })
+defineEmits(['call-next'])
 
 function statusColor(s) {
   return { WAITING:'waiting', IN_QUEUE:'waiting', IN_CONSULTATION:'active', COMPLETED:'done', PASSED:'warn', CANCELLED:'error' }[s] || 'waiting'
@@ -62,9 +67,8 @@ function statusColor(s) {
 .queue-list { flex: 1; overflow-y: auto; padding: 8px 12px; }
 .queue-item {
   padding: 14px; border-radius: var(--radius-md); margin-bottom: 6px;
-  cursor: pointer; border: 1.5px solid transparent; transition: var(--transition);
+  border: 1.5px solid transparent; transition: var(--transition);
 }
-.queue-item:hover { background: var(--bg-panel); }
 .queue-item.active { background: var(--accent-light); border-color: var(--accent); }
 .item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .patient-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
@@ -84,5 +88,8 @@ function statusColor(s) {
   background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
   cursor: pointer; transition: var(--transition); box-shadow: 0 2px 8px rgba(26,127,140,0.3);
 }
-.call-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+.call-btn:hover:not(:disabled) { background: var(--accent-dark); transform: translateY(-1px); }
+.call-btn.disabled { background: var(--text-muted); box-shadow: none; cursor: not-allowed; }
+.call-btn:disabled { cursor: not-allowed; }
+.call-hint { font-size: 11px; color: var(--warning); text-align: center; margin-top: 6px; }
 </style>

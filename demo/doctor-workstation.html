@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>智慧云脑诊疗平台 — 医生门诊工作台</title>
+<style>
+/* ===== Reset & Variables ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0b1929;
+  --bg-sidebar: #0f2440;
+  --bg-main: #f2f5f8;
+  --bg-card: #ffffff;
+  --bg-panel: #f8fafb;
+  --text-primary: #1a2b3c;
+  --text-secondary: #5a6d80;
+  --text-muted: #8899aa;
+  --accent: #1a7f8c;
+  --accent-light: #e0f4f5;
+  --accent-dark: #0f5a65;
+  --success: #2e9e5f;
+  --warning: #e8933b;
+  --danger: #d1464b;
+  --info: #3b7fd4;
+  --border: #e2e8ef;
+  --shadow-sm: 0 1px 3px rgba(11,25,41,0.06);
+  --shadow-md: 0 4px 12px rgba(11,25,41,0.08);
+  --shadow-lg: 0 8px 24px rgba(11,25,41,0.12);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --font-display: 'LXGW WenKai', 'PingFang SC', 'Microsoft YaHei', serif;
+  --font-body: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: 64px;
+  background: var(--bg-sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 8px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #1a9fad, #0f7a88);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+  font-size: 20px; color: #fff; font-weight: 700;
+  box-shadow: 0 4px 12px rgba(15,122,136,0.35);
+}
+.sidebar-btn {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  border: none; background: transparent;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  font-size: 18px;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-btn:hover, .sidebar-btn.active {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+.sidebar-btn.active::before {
+  content: '';
+  position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; background: #1a9fad; border-radius: 0 3px 3px 0;
+}
+.sidebar-spacer { flex: 1; }
+
+/* ===== Main Layout ===== */
+.main { flex: 1; display: flex; overflow: hidden; }
+
+/* ===== Left Panel — Queue ===== */
+.panel-left {
+  width: 320px; flex-shrink: 0;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-sm);
+}
+.panel-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-header h2 { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.panel-header .badge {
+  background: var(--accent-light); color: var(--accent-dark);
+  font-size: 12px; padding: 3px 10px; border-radius: 12px; font-weight: 600;
+}
+.queue-list { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.queue-item {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1.5px solid transparent;
+  position: relative;
+}
+.queue-item:hover { background: var(--bg-panel); }
+.queue-item.active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+.queue-item .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.queue-item .q-name { font-size: 14px; font-weight: 600; }
+.queue-item .q-number { font-size: 11px; color: var(--text-muted); background: var(--bg-panel); padding: 2px 8px; border-radius: 8px; }
+.queue-item .q-info { font-size: 12px; color: var(--text-secondary); }
+.status-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px;
+}
+.status-waiting { background: var(--text-muted); }
+.status-consulting { background: var(--accent); animation: pulse 2s infinite; }
+.status-passed { background: var(--warning); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ===== Center Panel — Workspace ===== */
+.panel-center { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 24px; gap: 16px; }
+
+.top-bar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 20px;
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.top-bar .doctor-info { display: flex; align-items: center; gap: 10px; }
+.top-bar .doctor-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a7f8c, #39a0b0);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 16px;
+}
+.top-bar .doctor-name { font-size: 14px; font-weight: 600; }
+.top-bar .doctor-dept { font-size: 12px; color: var(--text-muted); }
+.top-bar .spacer { flex: 1; }
+.top-bar .call-btn {
+  padding: 10px 24px; border-radius: 22px; border: none;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(26,127,140,0.3);
+}
+.top-bar .call-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+
+.cards-row { display: flex; gap: 16px; }
+.card {
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  padding: 20px; box-shadow: var(--shadow-sm); flex: 1;
+}
+.card h3 {
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Patient Info */
+.patient-card .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
+.patient-card .info-label { color: var(--text-muted); font-size: 11px; }
+.patient-card .info-value { color: var(--text-primary); font-weight: 500; }
+
+/* EMR */
+.emr-card { min-height: 200px; }
+.emr-card textarea {
+  width: 100%; min-height: 120px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px; font-family: var(--font-body);
+  font-size: 13px; line-height: 1.7; resize: vertical; outline: none;
+  transition: var(--transition);
+}
+.emr-card textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+/* ===== Right Panel — AI ===== */
+.panel-right {
+  width: 360px; flex-shrink: 0;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-sm);
+}
+.ai-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.ai-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); animation: pulse 2s infinite;
+}
+.ai-header h2 { font-size: 14px; font-weight: 600; }
+.ai-header span { font-size: 11px; color: var(--text-muted); }
+
+.ai-content { flex: 1; overflow-y: auto; padding: 16px; }
+.ai-card {
+  background: var(--bg-panel); border-radius: var(--radius-md);
+  padding: 14px; margin-bottom: 10px;
+  border-left: 3px solid var(--accent);
+}
+.ai-card h4 { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--accent-dark); }
+.ai-card p { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+.ai-card.warning { border-left-color: var(--warning); }
+.ai-card.warning h4 { color: var(--warning); }
+.ai-card.info { border-left-color: var(--info); }
+.ai-card.info h4 { color: var(--info); }
+
+.ai-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
+.ai-input {
+  display: flex; gap: 8px; align-items: center;
+  font-size: 12px; color: var(--text-muted);
+}
+.ai-input::before {
+  content: '🎤';
+  font-size: 16px;
+}
+
+/* ===== Order Panel ===== */
+.order-row { display: flex; gap: 12px; }
+.order-btn {
+  flex: 1; padding: 14px;
+  border-radius: var(--radius-md); border: 1.5px solid var(--border);
+  background: var(--bg-card); cursor: pointer;
+  text-align: center; transition: var(--transition);
+  font-family: var(--font-body);
+}
+.order-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+.order-btn .o-icon { font-size: 24px; margin-bottom: 6px; }
+.order-btn .o-label { font-size: 13px; font-weight: 600; }
+.order-btn .o-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(11,25,41,0.5);
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000; backdrop-filter: blur(4px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: var(--radius-lg); padding: 28px;
+  width: 480px; box-shadow: var(--shadow-lg);
+}
+.modal h3 { font-size: 16px; margin-bottom: 20px; }
+.modal .form-group { margin-bottom: 16px; }
+.modal label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.modal input, .modal select, .modal textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-body);
+  outline: none; transition: var(--transition);
+}
+.modal input:focus, .modal select:focus { border-color: var(--accent); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.btn-primary {
+  padding: 10px 24px; border: none; border-radius: 20px;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+}
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-ghost {
+  padding: 10px 20px; border: 1px solid var(--border); border-radius: 20px;
+  background: #fff; color: var(--text-secondary); font-size: 13px;
+  cursor: pointer; transition: var(--transition);
+}
+.btn-ghost:hover { background: var(--bg-panel); }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed; top: 24px; right: 24px;
+  padding: 12px 20px; border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 600; color: #fff;
+  z-index: 2000; opacity: 0; transform: translateY(-10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: var(--success); }
+.toast.info { background: var(--info); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d0d8e0; border-radius: 10px; }
+
+/* Active consultation indicator */
+.consulting-banner {
+  background: linear-gradient(135deg, #e0f4f5, #d0edf0);
+  border-radius: var(--radius-md); padding: 10px 16px;
+  font-size: 13px; display: flex; align-items: center; gap: 8px;
+  color: var(--accent-dark);
+}
+.consulting-banner .live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); animation: pulse 1.5s infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- ==== Sidebar ==== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">云</div>
+  <button class="sidebar-btn active" title="门诊工作台">🏥</button>
+  <button class="sidebar-btn" title="电子病历">📋</button>
+  <button class="sidebar-btn" title="检查检验">🔬</button>
+  <button class="sidebar-btn" title="药房管理">💊</button>
+  <div class="sidebar-spacer"></div>
+  <button class="sidebar-btn" title="设置">⚙</button>
+  <button class="sidebar-btn" title="退出" style="color:rgba(255,255,255,0.3)">⏻</button>
+</aside>
+
+<!-- ==== Main ==== -->
+<main class="main">
+
+  <!-- Left: Queue -->
+  <section class="panel-left">
+    <div class="panel-header">
+      <h2>候诊队列</h2>
+      <span class="badge" id="queueCount">6 人</span>
+    </div>
+    <div class="queue-list" id="queueList">
+      <div class="queue-item active" data-patient="p-001">
+        <div class="q-header">
+          <span class="q-name">李建国 <span class="status-dot status-consulting"></span></span>
+          <span class="q-number">#1</span>
+        </div>
+        <div class="q-info">男 · 58岁 · 胸痛待查</div>
+      </div>
+      <div class="queue-item" data-patient="p-002">
+        <div class="q-header">
+          <span class="q-name">王秀兰 <span class="status-dot status-waiting"></span></span>
+          <span class="q-number">#2</span>
+        </div>
+        <div class="q-info">女 · 45岁 · 咳嗽发热</div>
+      </div>
+      <div class="queue-item" data-patient="p-003">
+        <div class="q-header">
+          <span class="q-name">陈明辉 <span class="status-dot status-waiting"></span></span>
+          <span class="q-number">#3</span>
+        </div>
+        <div class="q-info">男 · 32岁 · 头痛眩晕</div>
+      </div>
+      <div class="queue-item" data-patient="p-004">
+        <div class="q-header">
+          <span class="q-name">赵丽华 <span class="status-dot status-waiting"></span></span>
+          <span class="q-number">#4</span>
+        </div>
+        <div class="q-info">女 · 61岁 · 关节疼痛</div>
+      </div>
+      <div class="queue-item" data-patient="p-005">
+        <div class="q-header">
+          <span class="q-name">刘文博 <span class="status-dot status-waiting"></span></span>
+          <span class="q-number">#5</span>
+        </div>
+        <div class="q-info">男 · 7岁 · 腹痛腹泻</div>
+      </div>
+      <div class="queue-item" data-patient="p-006">
+        <div class="q-header">
+          <span class="q-name">吴晓芳 <span class="status-dot status-passed"></span></span>
+          <span class="q-number">#6</span>
+        </div>
+        <div class="q-info">女 · 29岁 · 过号</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Center: Workspace -->
+  <section class="panel-center">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="doctor-info">
+        <div class="doctor-avatar">张</div>
+        <div>
+          <div class="doctor-name">张明远 主任医师</div>
+          <div class="doctor-dept">心内科 ｜ 今日已接诊 12 人</div>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <button class="call-btn" onclick="callNext()">📢 叫号</button>
+    </div>
+
+    <!-- Consulting banner -->
+    <div class="consulting-banner" id="banner">
+      <span class="live-dot"></span>
+      <span>当前接诊：<strong id="currentPatient">李建国</strong>（男 · 58岁） ｜ 已接诊 <span id="timer">08:30</span></span>
+    </div>
+
+    <!-- Patient info + EMR row -->
+    <div class="cards-row">
+      <div class="card patient-card" style="flex:1">
+        <h3>📌 患者信息</h3>
+        <div class="info-grid">
+          <div><div class="info-label">姓名</div><div class="info-value" id="piName">李建国</div></div>
+          <div><div class="info-label">性别 / 年龄</div><div class="info-value" id="piGender">男 / 58岁</div></div>
+          <div><div class="info-label">就诊号</div><div class="info-value">20260612001</div></div>
+          <div><div class="info-label">挂号来源</div><div class="info-value">线上预约</div></div>
+          <div><div class="info-label">主诉</div><div class="info-value" id="piComplaint">胸痛伴胸闷 3 日</div></div>
+          <div><div class="info-label">既往史</div><div class="info-value">高血压 10 年</div></div>
+        </div>
+      </div>
+
+      <div class="card emr-card" style="flex:2">
+        <h3>📝 电子病历</h3>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input placeholder="主诉" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px" value="胸痛伴胸闷 3 日" id="chiefComplaint">
+          <input placeholder="诊断" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px" value="冠心病 不稳定型心绞痛" id="diagnosis">
+        </div>
+        <textarea id="emrContent" placeholder="现病史、体格检查、辅助检查...">患者3天前无明显诱因出现胸骨后压榨性疼痛，向左肩放射，每次持续5-10分钟，休息后缓解。今日加重，伴胸闷气短。
+
+查体：T 36.5℃ P 78次/分 R 18次/分 BP 145/92mmHg
+双肺呼吸音清，未闻及干湿性啰音。心率78次/分，律齐。
+
+辅助检查：心电图提示 V1-V4 导联 ST 段压低 0.1mV</textarea>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn-ghost">暂存草稿</button>
+          <button class="btn-primary" onclick="saveEmr()">✅ 保存病历</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order buttons -->
+    <div class="card">
+      <h3>📋 下达医嘱</h3>
+      <div class="order-row">
+        <button class="order-btn" onclick="openOrderModal('IMAGING')">
+          <div class="o-icon">🔬</div>
+          <div class="o-label">开具检查</div>
+          <div class="o-desc">CT / MRI / X线 / 超声</div>
+        </button>
+        <button class="order-btn" onclick="openOrderModal('LAB')">
+          <div class="o-icon">🧪</div>
+          <div class="o-label">开具检验</div>
+          <div class="o-desc">血常规 / 生化 / 心肌酶</div>
+        </button>
+        <button class="order-btn" onclick="openOrderModal('PRESCRIPTION')">
+          <div class="o-icon">💊</div>
+          <div class="o-label">开具处方</div>
+          <div class="o-desc">西药 / 中成药 / 注射</div>
+        </button>
+        <button class="order-btn" onclick="endConsultation()">
+          <div class="o-icon">✅</div>
+          <div class="o-label">结束就诊</div>
+          <div class="o-desc">归档病历 · 下发处方</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right: AI Assistant -->
+  <section class="panel-right">
+    <div class="ai-header">
+      <span class="ai-dot"></span>
+      <h2>AI 助理医生</h2>
+      <span>实时伴诊中</span>
+    </div>
+    <div class="ai-content">
+      <div class="ai-card warning">
+        <h4>⚠️ 鉴别诊断提示</h4>
+        <p>患者胸痛+心电图ST段改变，高度警惕<strong>急性冠脉综合征</strong>，建议立即完善肌钙蛋白、心肌酶谱，必要时行冠脉造影。</p>
+      </div>
+      <div class="ai-card">
+        <h4>🔍 诊断建议</h4>
+        <p>1. 不稳定型心绞痛<br>2. 急性心肌梗死待排<br>3. 高血压病 2级</p>
+      </div>
+      <div class="ai-card info">
+        <h4>💡 用药合规提醒</h4>
+        <p>建议：阿司匹林 300mg 嚼服 + 氯吡格雷 300mg 负荷量。注意排查出血风险及过敏史。</p>
+      </div>
+      <div class="ai-card">
+        <h4>📊 辅助检查推荐</h4>
+        <p>• 高敏肌钙蛋白 I（0h/3h）<br>• 心电图动态监测<br>• 心脏超声<br>• 冠脉CTA</p>
+      </div>
+    </div>
+    <div class="ai-footer">
+      <div class="ai-input">AI 正在监听问诊对话，实时推送诊疗建议</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Order Modal -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <h3 id="modalTitle">开具检查</h3>
+    <div class="form-group"><label>医嘱类型</label><input id="orderType" readonly></div>
+    <div class="form-group" id="modalBodyExtra"></div>
+    <div class="form-group"><label>备注</label><textarea rows="2" id="orderNote" placeholder="补充说明..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn-primary" onclick="submitOrder()">确认开具</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== State =====
+let currentOrderType = '';
+const patients = {
+  'p-001': { name:'李建国', gender:'男', age:58, complaint:'胸痛伴胸闷 3 日', history:'高血压 10 年' },
+  'p-002': { name:'王秀兰', gender:'女', age:45, complaint:'咳嗽发热 5 日', history:'无特殊' },
+  'p-003': { name:'陈明辉', gender:'男', age:32, complaint:'头痛眩晕 1 周', history:'偏头痛史' },
+  'p-004': { name:'赵丽华', gender:'女', age:61, complaint:'双膝关节疼痛 2 年', history:'骨关节炎' },
+  'p-005': { name:'刘文博', gender:'男', age:7, complaint:'腹痛伴腹泻 2 日', history:'无特殊' },
+  'p-006': { name:'吴晓芳', gender:'女', age:29, complaint:'过号', history:'—' }
+};
+
+// ===== Queue Click =====
+document.querySelectorAll('.queue-item').forEach(item => {
+  item.addEventListener('click', function() {
+    document.querySelectorAll('.queue-item').forEach(i => i.classList.remove('active'));
+    this.classList.add('active');
+    const pid = this.dataset.patient;
+    const p = patients[pid];
+    if (!p) return;
+    document.getElementById('piName').textContent = p.name;
+    document.getElementById('piGender').textContent = p.gender + ' / ' + p.age + '岁';
+    document.getElementById('piComplaint').textContent = p.complaint;
+    document.getElementById('currentPatient').textContent = p.name;
+    document.getElementById('banner').style.display = p.complaint === '过号' ? 'none' : 'flex';
+  });
+});
+
+// ===== Call Next =====
+function callNext() {
+  const waiting = document.querySelector('.queue-item:not(.active) .status-dot.status-waiting');
+  if (waiting) {
+    const item = waiting.closest('.queue-item');
+    const pid = item.dataset.patient;
+    if (pid && patients[pid].complaint !== '过号') {
+      toast('已叫号 #' + item.querySelector('.q-number').textContent + ' ' + patients[pid].name, 'info');
+      item.click();
+    }
+  }
+}
+
+// ===== EMR Save =====
+function saveEmr() {
+  toast('病历已保存 ✅ （已同步至 ES 全文索引）', 'success');
+}
+
+// ===== Order Modal =====
+function openOrderModal(type) {
+  currentOrderType = type;
+  const titles = { IMAGING:'开具检查', LAB:'开具检验', PRESCRIPTION:'开具处方' };
+  document.getElementById('modalTitle').textContent = titles[type];
+  document.getElementById('orderType').value = titles[type];
+  document.getElementById('orderNote').value = '';
+
+  const extra = document.getElementById('modalBodyExtra');
+  if (type === 'IMAGING') {
+    extra.innerHTML = '<label>检查项目</label><select><option>头部 CT 平扫</option><option>胸部 CT 平扫</option><option>冠脉 CTA</option><option>心脏超声</option></select>';
+  } else if (type === 'LAB') {
+    extra.innerHTML = '<label>检验项目</label><select><option>血常规 + CRP</option><option>高敏肌钙蛋白 I</option><option>心肌酶谱</option><option>生化全项</option></select>';
+  } else {
+    extra.innerHTML = '<label>处方药品</label><input placeholder="药品名称、剂量、用法">';
+  }
+
+  document.getElementById('orderModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('orderModal').classList.remove('show');
+}
+
+function submitOrder() {
+  const titles = { IMAGING:'检查', LAB:'检验', PRESCRIPTION:'处方' };
+  toast(titles[currentOrderType] + '已开具 — 同步确认 accepted ✅', 'success');
+  closeModal();
+}
+
+// ===== End Consultation =====
+function endConsultation() {
+  toast('就诊结束 ✅  病历已归档，处方已下发至药房', 'success');
+}
+
+// ===== Toast =====
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type || 'success') + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ===== Timer =====
+let seconds = 510;
+setInterval(() => {
+  seconds++;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  document.getElementById('timer').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}, 1000);
+
+// ===== Keyboard shortcut =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+
+</body>
+</html>

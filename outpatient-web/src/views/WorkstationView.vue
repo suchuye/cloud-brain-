@@ -125,9 +125,9 @@ onUnmounted(() => clearInterval(pollTimer))
 </script>
 
 <style scoped>
-.workstation { display: flex; height: 100vh; }
+.workstation { display: flex; height: 100%; width: 100%; }
 .workspace {
-  flex: 1; overflow-y: auto; padding: 20px 24px;
+  flex: 1; min-width: 0; overflow-y: auto; padding: 20px 24px;
   display: flex; flex-direction: column; gap: 16px;
 }
 </style>

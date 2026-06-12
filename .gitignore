@@ -14,3 +14,5 @@ target/
 nacos/
 elasticsearch-8.16.0/
 kibana-8.16.0/
+node_modules/
+dist/

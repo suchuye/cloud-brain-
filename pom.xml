@@ -12,6 +12,15 @@
     <name>Cloud Brain Platform</name>
     <description>智慧云脑诊疗平台 - 医生端微服务集群</description>
 
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
+
     <modules>
         <module>cloud-brain-shared-kernel</module>
         <module>cloud-brain-gateway</module>
@@ -23,6 +32,7 @@
         <module>cloud-brain-order-routing</module>
         <module>cloud-brain-patient</module>
         <module>cloud-brain-admin</module>
+        <module>cloud-brain-ai-llm</module>
     </modules>
 
     <parent>
@@ -38,6 +48,7 @@
         <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <opentelemetry.version>1.37.0</opentelemetry.version>
+        <spring-ai.version>1.0.0</spring-ai.version>
     </properties>
 
     <dependencyManagement>
@@ -60,6 +71,13 @@
                 <groupId>com.cloudbrain</groupId>
                 <artifactId>cloud-brain-shared-kernel</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

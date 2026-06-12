@@ -1,0 +1,23 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: cloud-brain-ai-llm
+
+ai:
+  llm:
+    provider: ${AI_PROVIDER:fallback}
+    openai:
+      api-key: ${AI_API_KEY:sk-your-key-here}
+      base-url: ${AI_BASE_URL:https://api.openai.com}
+      model: ${AI_MODEL:gpt-4o-mini}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  tracing:
+    sampling:
+      probability: 1.0

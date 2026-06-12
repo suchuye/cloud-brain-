@@ -3,16 +3,28 @@ package com.cloudbrain.aiassistant.application;
 import com.cloudbrain.aiassistant.domain.entity.DiagnosticSession;
 import com.cloudbrain.aiassistant.infrastructure.messaging.AiEventPublisher;
 import com.cloudbrain.shared.event.ConsultationAiSummaryEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AiAssistantService {
 
+    private static final Logger log = LoggerFactory.getLogger(AiAssistantService.class);
+    private static final String LLM_URL = "http://localhost:8089/api/llm";
+
     private final Map<String, DiagnosticSession> sessions = new ConcurrentHashMap<>();
     private final AiEventPublisher eventPublisher;
+    private final HttpClient http = HttpClient.newHttpClient();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public AiAssistantService(AiEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
@@ -21,49 +33,52 @@ public class AiAssistantService {
     public DiagnosticSession startSession(String consultationId, String doctorId) {
         DiagnosticSession session = new DiagnosticSession(consultationId, doctorId);
         sessions.put(session.getId(), session);
+        log.info("AI session started: consultation={}, doctor={}", consultationId, doctorId);
         return session;
     }
 
     public String processText(String sessionId, String text) {
         DiagnosticSession session = sessions.get(sessionId);
         if (session == null) throw new RuntimeException("Session not found");
+        session.addDialog("医生: " + text);
 
-        session.addDialog("doctor: " + text);
-
-        // 模拟 LLM 推理
-        String suggestion = analyze(text);
+        String dialogHistory = String.join("\n", session.getDialogHistory());
+        String suggestion = callLlm("diagnose", dialogHistory);
         session.addSuggestion(suggestion);
-
         return suggestion;
     }
 
     public DiagnosticSession endSession(String sessionId) {
         DiagnosticSession session = sessions.get(sessionId);
         if (session == null) throw new RuntimeException("Session not found");
-
         session.end();
         sessions.remove(sessionId);
 
-        // 异步归档摘要
-        eventPublisher.publish(new ConsultationAiSummaryEvent(
-                session.getConsultationId(), session.buildSummary()));
+        String dialogHistory = String.join("\n", session.getDialogHistory());
+        String summary = callLlm("summarize", dialogHistory);
+        eventPublisher.publish(new ConsultationAiSummaryEvent(session.getConsultationId(), summary));
 
+        log.info("AI session ended: consultation={}, dialogs={}",
+                session.getConsultationId(), session.getDialogHistory().size());
         return session;
     }
 
-    private String analyze(String text) {
-        if (text.contains("头痛") || text.contains("头疼")) {
-            return "考虑偏头痛或紧张性头痛，建议询问发作频率、持续时间及伴随症状";
+    private String callLlm(String endpoint, String dialog) {
+        try {
+            var body = mapper.writeValueAsString(Map.of("dialog", dialog));
+            var req = HttpRequest.newBuilder()
+                    .uri(URI.create(LLM_URL + "/" + endpoint))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+            var resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() == 200) {
+                var tree = mapper.readTree(resp.body());
+                return tree.get("result").asText("LLM 未返回结果");
+            }
+        } catch (Exception e) {
+            log.warn("LLM call failed, using fallback", e);
         }
-        if (text.contains("发热") || text.contains("发烧")) {
-            return "考虑感染性疾病，建议完善血常规、CRP，排查呼吸道/泌尿道感染";
-        }
-        if (text.contains("胸痛") || text.contains("胸闷")) {
-            return "⚠️ 警惕急性冠脉综合征，建议立即心电图 + 肌钙蛋白";
-        }
-        if (text.contains("咳嗽")) {
-            return "考虑呼吸道感染或过敏，建议听诊双肺呼吸音，必要时胸部 X 线";
-        }
-        return "已记录，建议进一步询问伴随症状及病程";
+        return "【鉴别诊断】\nLLM 服务暂不可用\n【建议检查】\n根据临床需要完善相关检查";
     }
 }

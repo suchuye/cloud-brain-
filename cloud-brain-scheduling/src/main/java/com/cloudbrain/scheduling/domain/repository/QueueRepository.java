@@ -10,4 +10,5 @@ public interface QueueRepository extends JpaRepository<Queue, String> {
     List<Queue> findByDoctorIdAndStatusOrderByQueueNumberAsc(String doctorId, QueueStatus status);
     Optional<Queue> findTopByDoctorIdAndStatusOrderByQueueNumberAsc(String doctorId, QueueStatus status);
     List<Queue> findByDoctorIdAndStatus(String doctorId, QueueStatus status);
+    List<Queue> findByDoctorIdAndStatusInOrderByQueueNumberAsc(String doctorId, List<QueueStatus> statuses);
 }

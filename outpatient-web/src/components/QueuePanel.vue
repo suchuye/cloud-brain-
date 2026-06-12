@@ -51,7 +51,7 @@ function statusColor(s) {
 
 <style scoped>
 .panel {
-  width: 320px; flex-shrink: 0; background: var(--bg-card);
+  width: 260px; flex-shrink: 0; background: var(--bg-card);
   border-right: 1px solid var(--border); display: flex; flex-direction: column;
   box-shadow: var(--shadow-sm);
 }

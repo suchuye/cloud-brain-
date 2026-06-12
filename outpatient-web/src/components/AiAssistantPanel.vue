@@ -39,7 +39,7 @@ defineProps({ consulting: Boolean })
 
 <style scoped>
 .panel {
-  width: 360px; flex-shrink: 0; background: var(--bg-card);
+  width: 300px; flex-shrink: 0; background: var(--bg-card);
   border-left: 1px solid var(--border); display: flex; flex-direction: column;
   box-shadow: var(--shadow-sm);
 }

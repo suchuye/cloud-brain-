@@ -5,8 +5,17 @@ import { Client } from '@stomp/stompjs'
 export const useAiStore = defineStore('ai', () => {
   const connected = ref(false)
   const sessionId = ref(null)
-  const suggestions = ref([])
+  const messages = ref([])
+  const loading = ref(false)
   const client = new Client()
+
+  function addMessage(role, text) {
+    messages.value.push({
+      role, text,
+      time: new Date().toLocaleTimeString(),
+      id: Date.now()
+    })
+  }
 
   function connect(consultationId, doctorId) {
     if (client.connected) return
@@ -21,17 +30,14 @@ export const useAiStore = defineStore('ai', () => {
         })
         client.subscribe(`/topic/suggestion/${sessionId.value}`, msg => {
           const data = JSON.parse(msg.body)
-          suggestions.value.unshift({
-            text: data.text,
-            time: new Date().toLocaleTimeString()
-          })
-          if (suggestions.value.length > 20) suggestions.value.pop()
+          loading.value = false
+          addMessage('assistant', data.text)
         })
-        // 启动会话
         client.publish({
           destination: '/app/start-session',
           body: JSON.stringify({ consultationId, doctorId })
         })
+        addMessage('system', '诊断助理已就绪，可输入问诊内容获取建议')
       },
       onDisconnect: () => {
         connected.value = false
@@ -44,8 +50,10 @@ export const useAiStore = defineStore('ai', () => {
     client.activate()
   }
 
-  function sendTranscript(text) {
+  function ask(text) {
     if (!client.connected || !sessionId.value) return
+    addMessage('doctor', text)
+    loading.value = true
     client.publish({
       destination: '/app/transcript',
       body: JSON.stringify({ sessionId: sessionId.value, text })
@@ -62,8 +70,9 @@ export const useAiStore = defineStore('ai', () => {
     client.deactivate()
     connected.value = false
     sessionId.value = null
-    suggestions.value = []
+    messages.value = []
+    loading.value = false
   }
 
-  return { connected, sessionId, suggestions, connect, sendTranscript, disconnect }
+  return { connected, sessionId, messages, loading, connect, ask, disconnect }
 })

@@ -176,7 +176,7 @@ async function handleSubmitOrder(detail) {
 
 function handleEmrSaved(content) {
   showToast('病历已保存（已同步索引至 ES）')
-  ai.sendTranscript(content)
+  ai.ask('根据以下病历内容，请给出诊断建议：\n' + content)
 }
 
 function handleLogout() { auth.logout(); router.push('/') }

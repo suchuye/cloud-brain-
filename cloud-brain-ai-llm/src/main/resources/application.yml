@@ -7,11 +7,11 @@ spring:
 
 ai:
   llm:
-    provider: ${AI_PROVIDER:fallback}
+    provider: ${AI_PROVIDER:openai}
     openai:
-      api-key: ${AI_API_KEY:sk-your-key-here}
-      base-url: ${AI_BASE_URL:https://api.openai.com}
-      model: ${AI_MODEL:gpt-4o-mini}
+      api-key: ${AI_API_KEY:REPLACED}
+      base-url: ${AI_BASE_URL:https://api.deepseek.com}
+      model: ${AI_MODEL:deepseek-chat}
 
 management:
   endpoints:

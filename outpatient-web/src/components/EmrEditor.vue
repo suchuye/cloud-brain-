@@ -37,7 +37,7 @@ async function save() {
     presentIllness: content.value
   })
   await saveEmr(props.patientId, full)
-  emit('saved')
+  emit('saved', full)
 }
 </script>
 

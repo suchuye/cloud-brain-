@@ -1,40 +1,66 @@
 <template>
   <section class="panel">
     <div class="panel-header">
-      <span class="ai-dot" :class="{ inactive: !consulting }"></span>
+      <span class="ai-dot" :class="{ inactive: !ai.connected }"></span>
       <h2>AI 助理医生</h2>
-      <span>{{ consulting ? '实时伴诊中' : '待机' }}</span>
+      <span>{{ ai.connected ? 'DeepSeek 实时伴诊' : '待机' }}</span>
     </div>
 
     <div class="ai-content">
-      <div class="ai-card warning">
-        <h4>⚠️ 鉴别诊断提示</h4>
-        <p>AI 正在分析问诊内容，将实时推送鉴别诊断和用药合规建议。</p>
+      <!-- Real suggestions -->
+      <div
+        v-for="(s, i) in ai.suggestions" :key="i"
+        class="ai-card"
+        :class="cardStyle(s.text)"
+      >
+        <h4>{{ cardTitle(s.text) }}</h4>
+        <p>{{ s.text }}</p>
+        <div class="ai-time">{{ s.time }}</div>
       </div>
-      <div class="ai-card">
-        <h4>🔍 诊断建议</h4>
-        <p>接诊开始后，AI 将自动提取病历关键信息并推送可能的诊断方向。</p>
-      </div>
-      <div class="ai-card info">
-        <h4>💡 用药合规提醒</h4>
-        <p>开具处方时将自动校验药物相互作用及禁忌症。</p>
-      </div>
-      <div class="ai-card">
-        <h4>📊 辅助检查推荐</h4>
-        <p>根据主诉和体征，AI 将推荐必要的辅助检查项目。</p>
+
+      <!-- Welcome -->
+      <div v-if="!ai.suggestions.length" class="ai-placeholder">
+        <div class="ai-card">
+          <h4>🤖 DeepSeek 已就绪</h4>
+          <p>接诊开始后，AI 将自动分析问诊内容，实时推送：</p>
+          <ul style="margin-top:8px;font-size:12px;color:var(--text-secondary)">
+            <li>鉴别诊断</li>
+            <li>建议检查</li>
+            <li>用药提醒</li>
+          </ul>
+        </div>
+        <div class="ai-card warning">
+          <h4>⚠️ 提示</h4>
+          <p>所有 AI 建议仅供参考，最终诊断由医生确认。</p>
+        </div>
       </div>
     </div>
 
     <div class="panel-footer">
       <div class="mic-indicator">
-        🎤 AI 正在监听问诊对话，实时推送诊疗建议
+        {{ ai.connected ? '🟢 DeepSeek 在线，正在分析问诊内容' : '⚪ AI 待机中' }}
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-defineProps({ consulting: Boolean })
+import { useAiStore } from '../stores/ai'
+
+const ai = useAiStore()
+
+function cardStyle(text) {
+  if (text.includes('⚠️') || text.includes('警惕')) return 'warning'
+  if (text.includes('建议') || text.includes('检查') || text.includes('用药')) return 'info'
+  return ''
+}
+
+function cardTitle(text) {
+  if (text.includes('鉴别诊断') || text.includes('诊断')) return '🔍 鉴别诊断'
+  if (text.includes('检查') || text.includes('建议检查')) return '📊 检查建议'
+  if (text.includes('用药') || text.includes('药物')) return '💡 用药提醒'
+  return '🤖 AI 建议'
+}
 </script>
 
 <style scoped>
@@ -49,7 +75,7 @@ defineProps({ consulting: Boolean })
 }
 .ai-dot {
   width: 10px; height: 10px; border-radius: 50%;
-  background: var(--accent); animation: pulse 2s infinite;
+  background: var(--success); animation: pulse 2s infinite;
 }
 .ai-dot.inactive { background: var(--text-muted); animation: none; }
 .panel-header h2 { font-size: 14px; font-weight: 600; }
@@ -61,11 +87,13 @@ defineProps({ consulting: Boolean })
   padding: 14px; margin-bottom: 10px; border-left: 3px solid var(--accent);
 }
 .ai-card h4 { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--accent-dark); }
-.ai-card p { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+.ai-card p { font-size: 12px; line-height: 1.6; color: var(--text-secondary); white-space: pre-line; }
 .ai-card.warning { border-left-color: var(--warning); }
 .ai-card.warning h4 { color: var(--warning); }
 .ai-card.info { border-left-color: var(--info); }
 .ai-card.info h4 { color: var(--info); }
+.ai-time { font-size: 10px; color: var(--text-muted); margin-top: 6px; text-align: right; }
 .panel-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
 .mic-indicator { font-size: 12px; color: var(--text-muted); }
+.ai-placeholder .ai-card ul { padding-left: 16px; }
 </style>

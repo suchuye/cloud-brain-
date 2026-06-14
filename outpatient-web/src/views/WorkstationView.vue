@@ -25,7 +25,7 @@
 
       <EmrEditor
         :patient-id="store.current?.id"
-        @saved="handleEmrSaved"
+        @saved="(content) => handleEmrSaved(content)"
       />
 
       <OrderBar
@@ -81,6 +81,7 @@ import { useAuthStore } from '../stores/auth'
 import { useConsultationStore } from '../stores/consultation'
 import { submitOrder } from '../api/order'
 import { getPatientEmrs } from '../api/outpatient'
+import { useAiStore } from '../stores/ai'
 import Sidebar from '../components/Sidebar.vue'
 import QueuePanel from '../components/QueuePanel.vue'
 import TopBar from '../components/TopBar.vue'
@@ -96,6 +97,7 @@ import Toast from '../components/Toast.vue'
 const router = useRouter()
 const auth = useAuthStore()
 const store = useConsultationStore()
+const ai = useAiStore()
 const toastRef = ref(null)
 const showOrderModal = ref(false)
 const orderType = ref('')
@@ -116,6 +118,7 @@ async function handleCallNext() {
   if (patient) {
     showToast(`已叫号 #${patient.queueNumber} ${patient.patientName}`)
     loadPatientHistory(patient.patientId)
+    ai.connect(patient.id, auth.user?.id || 'd-001')
   } else {
     showToast('当前无候诊患者')
   }
@@ -139,6 +142,7 @@ async function handleVerified() {
   if (pendingAction.value === 'end') {
     try {
       await store.endConsult(store.current.id)
+      ai.disconnect()
       patientHistory.value = []
       showToast('就诊结束 ✅')
     } catch { showToast('操作失败') }
@@ -170,7 +174,10 @@ async function handleSubmitOrder(detail) {
   } catch { showToast('医嘱提交失败') }
 }
 
-function handleEmrSaved() { showToast('病历已保存（已同步索引至 ES）') }
+function handleEmrSaved(content) {
+  showToast('病历已保存（已同步索引至 ES）')
+  ai.sendTranscript(content)
+}
 
 function handleLogout() { auth.logout(); router.push('/') }
 

@@ -8,6 +8,7 @@ export const useAiStore = defineStore('ai', () => {
   const messages = ref([])
   const loading = ref(false)
   const client = new Client()
+  let suggestionSub = null
 
   function addMessage(role, text) {
     messages.value.push({
@@ -22,16 +23,19 @@ export const useAiStore = defineStore('ai', () => {
 
     client.configure({
       brokerURL: 'ws://localhost:8084/ws/ai-assistant',
+      reconnectDelay: 3000,
       onConnect: () => {
         connected.value = true
+        // Start session first, response comes to /topic/session
         client.subscribe('/topic/session', msg => {
           const data = JSON.parse(msg.body)
           sessionId.value = data.id
-        })
-        client.subscribe(`/topic/suggestion/${sessionId.value}`, msg => {
-          const data = JSON.parse(msg.body)
-          loading.value = false
-          addMessage('assistant', data.text)
+          // Now subscribe to this session's suggestion channel
+          if (suggestionSub) suggestionSub.unsubscribe()
+          suggestionSub = client.subscribe(`/topic/suggestion/${data.id}`, msg => {
+            loading.value = false
+            addMessage('assistant', JSON.parse(msg.body).text)
+          })
         })
         client.publish({
           destination: '/app/start-session',
@@ -42,6 +46,7 @@ export const useAiStore = defineStore('ai', () => {
       onDisconnect: () => {
         connected.value = false
         sessionId.value = null
+        if (suggestionSub) { suggestionSub.unsubscribe(); suggestionSub = null }
       },
       onStompError: frame => {
         console.error('STOMP error:', frame.headers['message'])
@@ -51,7 +56,10 @@ export const useAiStore = defineStore('ai', () => {
   }
 
   function ask(text) {
-    if (!client.connected || !sessionId.value) return
+    if (!client.connected || !sessionId.value) {
+      addMessage('system', '诊断助理未连接，请先开始接诊')
+      return
+    }
     addMessage('doctor', text)
     loading.value = true
     client.publish({
@@ -67,6 +75,7 @@ export const useAiStore = defineStore('ai', () => {
         body: JSON.stringify({ sessionId: sessionId.value })
       })
     }
+    if (suggestionSub) { suggestionSub.unsubscribe(); suggestionSub = null }
     client.deactivate()
     connected.value = false
     sessionId.value = null

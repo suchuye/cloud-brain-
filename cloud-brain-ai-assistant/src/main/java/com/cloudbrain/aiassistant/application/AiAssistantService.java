@@ -4,17 +4,18 @@ import com.cloudbrain.aiassistant.domain.entity.DiagnosticSession;
 import com.cloudbrain.aiassistant.domain.repository.DiagnosticSessionRepository;
 import com.cloudbrain.aiassistant.infrastructure.messaging.AiEventPublisher;
 import com.cloudbrain.shared.event.ConsultationAiSummaryEvent;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.Map;
 
 @Service
@@ -24,15 +25,17 @@ public class AiAssistantService {
 
     private final DiagnosticSessionRepository repository;
     private final AiEventPublisher eventPublisher;
-    private final HttpClient http = HttpClient.newHttpClient();
+    private final RestTemplate restTemplate;
     private final ObjectMapper mapper = new ObjectMapper();
     private final String llmUrl;
 
     public AiAssistantService(DiagnosticSessionRepository repository,
                               AiEventPublisher eventPublisher,
+                              RestTemplate restTemplate,
                               @Value("${ai.llm.url:http://cloud-brain-ai-llm/api/llm}") String llmUrl) {
         this.repository = repository;
         this.eventPublisher = eventPublisher;
+        this.restTemplate = restTemplate;
         this.llmUrl = llmUrl;
     }
 
@@ -93,18 +96,16 @@ public class AiAssistantService {
 
     private String callLlm(String endpoint, String dialog) {
         try {
-            var body = mapper.writeValueAsString(Map.of("dialog", dialog));
-            var req = HttpRequest.newBuilder()
-                    .uri(URI.create(llmUrl + "/" + endpoint))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
-            var resp = http.send(req, HttpResponse.BodyHandlers.ofString());
-            if (resp.statusCode() == 200) {
-                var tree = mapper.readTree(resp.body());
-                return tree.get("result").asText("LLM 未返回结果");
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            var body = Map.of("dialog", dialog);
+            var entity = new HttpEntity<>(body, headers);
+
+            var resp = restTemplate.postForEntity(llmUrl + "/" + endpoint, entity, JsonNode.class);
+            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                return resp.getBody().get("result").asText("LLM 未返回结果");
             }
-            log.error("LLM returned HTTP {}", resp.statusCode());
+            log.error("LLM returned HTTP {}", resp.getStatusCode());
         } catch (Exception e) {
             log.warn("LLM call failed, using fallback", e);
         }

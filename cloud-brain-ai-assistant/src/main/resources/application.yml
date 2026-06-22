@@ -18,7 +18,7 @@ spring:
 
 ai:
   llm:
-    url: http://localhost:8089/api/llm
+    url: http://cloud-brain-ai-llm/api/llm
 
 management:
   endpoints:

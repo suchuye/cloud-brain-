@@ -12,22 +12,21 @@ public class RouteConfig {
     public RouteLocator routes(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route("auth", r -> r.path("/auth/**")
-                        .uri("http://localhost:8081"))
+                        .uri("lb://cloud-brain-auth"))
                 .route("outpatient", r -> r.path("/api/consultations/**", "/api/emr/**")
-                        .uri("http://localhost:8082"))
+                        .uri("lb://cloud-brain-outpatient"))
                 .route("imaging", r -> r.path("/api/imaging/**")
-                        .uri("http://localhost:8083"))
+                        .uri("lb://cloud-brain-imaging"))
                 .route("ai-assistant-ws", r -> r.path("/ws/ai-assistant/**")
-                        .uri("http://localhost:8084"))
+                        .uri("lb://cloud-brain-ai-assistant"))
                 .route("scheduling", r -> r.path("/api/scheduling/**")
-                        .uri("http://localhost:8085"))
+                        .uri("lb://cloud-brain-scheduling"))
                 .route("order-routing", r -> r.path("/api/orders/**")
-                        .uri("http://localhost:8086"))
+                        .uri("lb://cloud-brain-order-routing"))
                 .route("patient", r -> r.path("/api/patient/**")
-                        .uri("http://localhost:8087"))
+                        .uri("lb://cloud-brain-patient"))
                 .route("admin", r -> r.path("/api/admin/**")
-                        .uri("http://localhost:8088"))
-                // ai-llm is an internal service, not exposed through gateway
+                        .uri("lb://cloud-brain-admin"))
                 .build();
     }
 }

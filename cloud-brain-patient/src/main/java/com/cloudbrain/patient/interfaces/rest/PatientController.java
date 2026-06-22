@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller exposing patient-facing endpoints.
+ * Provides triage, appointment booking, and report retrieval APIs.
+ */
 @RestController
 @RequestMapping("/api/patient")
 public class PatientController {

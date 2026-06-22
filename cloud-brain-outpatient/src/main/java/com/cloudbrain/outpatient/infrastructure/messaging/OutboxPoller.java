@@ -10,6 +10,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Scheduled task that polls the outpatient_outbox table and sends unsent events to Kafka.
+ * Implements the Outbox pattern to guarantee at-least-once delivery with retry (max 3 attempts).
+ */
 @Component
 public class OutboxPoller {
 
@@ -24,6 +28,10 @@ public class OutboxPoller {
         this.kafka = kafka;
     }
 
+    /**
+     * Polls unsent outbox records every 500ms and sends them to Kafka.
+     * Marks records as sent on success; increments retry_count on failure.
+     */
     @Scheduled(fixedDelay = 500)
     public void poll() {
         List<Map<String, Object>> rows = jdbc.queryForList(

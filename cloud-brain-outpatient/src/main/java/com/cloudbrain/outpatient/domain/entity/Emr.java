@@ -3,6 +3,10 @@ package com.cloudbrain.outpatient.domain.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * EMR (Electronic Medical Record) entity associated with a consultation.
+ * Stores structured JSON content from dynamic medical record templates.
+ */
 @Entity
 @Table(name = "emr")
 public class Emr {
@@ -27,6 +31,9 @@ public class Emr {
         this.content = content;
     }
 
+    /**
+     * Replaces the EMR content and updates the modification timestamp.
+     */
     public void updateContent(String content) {
         this.content = content;
         this.updatedAt = Instant.now();

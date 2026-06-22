@@ -9,6 +9,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Aggregate root for the consultation bounded context.
+ * Manages the consultation lifecycle: WAITING -> IN_PROGRESS -> FINISHED, with PASSED as a skip state.
+ */
 @Entity
 @Table(name = "consultation")
 public class Consultation {
@@ -40,6 +44,10 @@ public class Consultation {
         this.patientInfo = patientInfo;
     }
 
+    /**
+     * Transitions from WAITING to IN_PROGRESS and emits a ConsultationStartedDomainEvent.
+     * Throws IllegalStateException if the consultation is not in WAITING status.
+     */
     public void start() {
         if (this.status != ConsultationStatus.WAITING) {
             throw new IllegalStateException("Consultation must be waiting to start");
@@ -49,11 +57,18 @@ public class Consultation {
         domainEvents.add(new ConsultationStartedDomainEvent(this.id, this.doctorId, this.patientInfo.getPatientId()));
     }
 
+    /**
+     * Marks the consultation as PASSED (patient did not show or was skipped).
+     */
     public void pass() {
         this.status = ConsultationStatus.PASSED;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * Transitions from IN_PROGRESS to FINISHED and emits a ConsultationFinishedDomainEvent.
+     * Throws IllegalStateException if the consultation is not in progress.
+     */
     public void finish() {
         if (this.status != ConsultationStatus.IN_PROGRESS) {
             throw new IllegalStateException("Consultation must be in progress to finish");

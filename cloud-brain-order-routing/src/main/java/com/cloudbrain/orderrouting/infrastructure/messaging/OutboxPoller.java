@@ -10,6 +10,12 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Scheduled outbox table poller for the order-routing service.
+ * <p>Polls the {@code order_outbox} table every 500ms, sends unsent events
+ * (retry_count < 3) to Kafka, and marks them as sent on success or increments
+ * the retry counter on failure.</p>
+ */
 @Component
 public class OutboxPoller {
 
@@ -24,6 +30,10 @@ public class OutboxPoller {
         this.kafka = kafka;
     }
 
+    /**
+     * Polls the outbox table for unsent events and forwards them to Kafka.
+     * Events that fail to send are retried up to 3 times before being abandoned.
+     */
     @Scheduled(fixedDelay = 500)
     public void poll() {
         List<Map<String, Object>> rows = jdbc.queryForList(

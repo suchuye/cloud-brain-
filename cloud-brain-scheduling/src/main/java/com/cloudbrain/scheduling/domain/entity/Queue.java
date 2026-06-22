@@ -6,6 +6,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Aggregate root for the queue bounded context.
+ * Manages patient queue state machine: WAITING -> IN_QUEUE -> IN_CONSULTATION -> {COMPLETED, PASSED},
+ * with CANCELLED as a terminal state reachable from any non-completed status.
+ */
 @Entity
 @Table(name = "queue")
 public class Queue {
@@ -41,12 +46,18 @@ public class Queue {
         this.source = source;
     }
 
+    /**
+     * Transitions from WAITING to IN_QUEUE (patient has arrived and checked in).
+     */
     public void checkIn() {
         if (status != QueueStatus.WAITING) throw new IllegalStateException("Not waiting");
         status = QueueStatus.IN_QUEUE;
         updatedAt = Instant.now();
     }
 
+    /**
+     * Transitions from IN_QUEUE to IN_CONSULTATION (doctor called the patient).
+     */
     public void call() {
         if (status != QueueStatus.IN_QUEUE) throw new IllegalStateException("Not in queue");
         status = QueueStatus.IN_CONSULTATION;
@@ -54,6 +65,9 @@ public class Queue {
         events.add("CALLED");
     }
 
+    /**
+     * Transitions from IN_CONSULTATION to COMPLETED (consultation finished normally).
+     */
     public void complete() {
         if (status != QueueStatus.IN_CONSULTATION) throw new IllegalStateException("Not in consultation");
         status = QueueStatus.COMPLETED;
@@ -61,6 +75,9 @@ public class Queue {
         events.add("COMPLETED");
     }
 
+    /**
+     * Transitions from IN_CONSULTATION to PASSED (patient did not show).
+     */
     public void pass() {
         if (status != QueueStatus.IN_CONSULTATION) throw new IllegalStateException("Not in consultation");
         status = QueueStatus.PASSED;
@@ -68,6 +85,9 @@ public class Queue {
         events.add("PASSED");
     }
 
+    /**
+     * Transitions to CANCELLED from any status except COMPLETED.
+     */
     public void cancel() {
         if (status == QueueStatus.COMPLETED) throw new IllegalStateException("Already completed");
         status = QueueStatus.CANCELLED;

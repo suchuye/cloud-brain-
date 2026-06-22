@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller exposing schedule management and patient queue operation endpoints.
+ */
 @RestController
 @RequestMapping("/api/scheduling")
 public class SchedulingController {

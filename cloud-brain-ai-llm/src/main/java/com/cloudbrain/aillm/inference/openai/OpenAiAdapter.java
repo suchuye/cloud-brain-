@@ -15,6 +15,11 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * OpenAI-compatible LLM adapter using the REST chat completions API.
+ * Activated by default or when {@code ai.llm.provider=openai}. Configurable via
+ * {@code ai.llm.openai.*} properties (api-key, base-url, model).
+ */
 @Component
 @ConditionalOnProperty(name = "ai.llm.provider", havingValue = "openai", matchIfMissing = true)
 public class OpenAiAdapter implements LlmAdapter {

@@ -5,6 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Infrastructure component that persists consultation domain events to the outbox table
+ * for reliable Kafka delivery via the Outbox pattern.
+ */
 @Component
 public class ConsultationEventPublisher {
 
@@ -16,6 +20,9 @@ public class ConsultationEventPublisher {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Serializes the event and inserts it into the outbox table for async Kafka delivery.
+     */
     public void publish(DomainEvent event) {
         try {
             String topic = resolveTopic(event);

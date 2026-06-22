@@ -16,11 +16,18 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+/**
+ * Security configuration for the outpatient module.
+ * Enables JWT OAuth2 resource server in production; permits all requests in non-prod profiles.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * Configures the security filter chain: stateless sessions, JWT auth in prod, permissive otherwise.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, Environment env) throws Exception {
         boolean isProd = Arrays.asList(env.getActiveProfiles()).contains("prod");
@@ -40,6 +47,9 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Creates a JWT decoder using HMAC-SHA256 with a secret from the JWT_SECRET env var or a default key.
+     */
     @Bean
     public JwtDecoder jwtDecoder() {
         String secret = System.getenv().getOrDefault("JWT_SECRET", "cloud-brain-platform-secret-key-min-256-bits!!");

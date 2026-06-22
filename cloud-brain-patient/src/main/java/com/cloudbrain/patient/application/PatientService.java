@@ -6,9 +6,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+/**
+ * Application service for patient-facing operations.
+ * Provides symptom-based triage (mapping symptoms to departments), appointment
+ * booking (delegated to the Scheduling service), and imaging report retrieval.
+ */
 @Service
 public class PatientService {
 
+    /**
+     * Maps a symptom keyword to a recommended department and urgency level.
+     * Uses simple keyword matching; chest pain is flagged as urgent.
+     */
     public Map<String, String> triage(TriageRequest req) {
         String symptom = req.symptom().toLowerCase();
         String department;
@@ -24,6 +33,10 @@ public class PatientService {
                 "urgency", symptom.contains("胸痛") ? "紧急" : "普通");
     }
 
+    /**
+     * Books an appointment for the patient in the specified department.
+     * Currently returns a simulated queue number; should delegate to the Scheduling service.
+     */
     public Map<String, String> book(BookRequest req) {
         // 实际应调用 Scheduling 服务创建队列记录
         return Map.of("status", "booked",
@@ -32,6 +45,10 @@ public class PatientService {
                 "queueNumber", String.valueOf(System.currentTimeMillis() % 100));
     }
 
+    /**
+     * Retrieves imaging reports for the given patient.
+     * Currently returns an empty list; should delegate to the Imaging service.
+     */
     public Object getReports(String patientId) {
         // 实际应查询 Imaging 服务
         return Map.of("patientId", patientId, "reports", java.util.List.of());

@@ -2,6 +2,9 @@ package com.cloudbrain.outpatient.domain.vo;
 
 import jakarta.persistence.Embeddable;
 
+/**
+ * Embeddable value object holding basic patient demographic information.
+ */
 @Embeddable
 public class PatientInfo {
 

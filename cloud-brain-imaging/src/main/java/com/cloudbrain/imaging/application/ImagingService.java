@@ -10,6 +10,11 @@ import com.cloudbrain.shared.event.CtReportGeneratedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Application service that orchestrates the imaging analysis pipeline.
+ * <p>Handles image submission, task lifecycle progression (preprocessing,
+ * inference, report generation), and outbox event publishing.</p>
+ */
 @Service
 public class ImagingService {
 
@@ -25,6 +30,11 @@ public class ImagingService {
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Submits a new imaging task from the provided image metadata and
+     * triggers the processing pipeline inline (preprocessing, inference,
+     * report generation).
+     */
     @Transactional
     public ImagingTask submitImage(SubmitImageRequest req) {
         ImagingTask task = new ImagingTask(req.consultationId(), req.orderId(),
@@ -37,16 +47,23 @@ public class ImagingService {
         return task;
     }
 
+    /** Retrieves an imaging task by its ID. Throws if not found. */
     public ImagingTask getTask(String taskId) {
         return taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
     }
 
+    /** Retrieves the AI report associated with the given task ID. Throws if not found. */
     public AiReport getReport(String taskId) {
         return reportRepository.findByImagingTaskId(taskId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
     }
 
+    /**
+     * Executes the full processing pipeline for an imaging task:
+     * preprocessing -> AI inference -> report generation -> event publishing.
+     * Each step persists state changes transactionally.
+     */
     @Transactional
     public void processTask(ImagingTask task) {
         // 预处理

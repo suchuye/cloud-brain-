@@ -6,6 +6,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller exposing admin-facing endpoints.
+ * Provides schedule management, doctor listing, and permission update APIs.
+ */
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {

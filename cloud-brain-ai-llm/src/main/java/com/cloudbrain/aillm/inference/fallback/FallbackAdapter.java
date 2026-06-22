@@ -4,6 +4,11 @@ import com.cloudbrain.aillm.inference.LlmAdapter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+/**
+ * Fallback LLM adapter using a rule-based keyword-matching engine.
+ * Activated when {@code ai.llm.provider=fallback}. Returns structured differential
+ * diagnosis suggestions based on symptom keywords extracted from the user message.
+ */
 @Component
 @ConditionalOnProperty(name = "ai.llm.provider", havingValue = "fallback")
 public class FallbackAdapter implements LlmAdapter {

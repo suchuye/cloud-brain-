@@ -11,6 +11,10 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service for indexing and searching EMR documents in Elasticsearch via the REST API.
+ * Supports full-text multi_match search and patient-scoped term queries.
+ */
 @Service
 public class EmrSearchService {
 
@@ -24,6 +28,9 @@ public class EmrSearchService {
         this.mapper = mapper;
     }
 
+    /**
+     * Indexes an EMR document in Elasticsearch, upserting by document ID.
+     */
     public void index(EmrDocument doc) {
         try {
             String json = mapper.writeValueAsString(doc);
@@ -38,6 +45,9 @@ public class EmrSearchService {
         }
     }
 
+    /**
+     * Retrieves a single EMR document from Elasticsearch by its ID, or null if not found.
+     */
     public EmrDocument findById(String emrId) {
         try {
             HttpRequest req = HttpRequest.newBuilder()
@@ -52,6 +62,9 @@ public class EmrSearchService {
         }
     }
 
+    /**
+     * Searches EMR documents by keyword across the chiefComplaint and presentIllness fields.
+     */
     public List<EmrDocument> searchByKeyword(String keyword) {
         try {
             String body = """
@@ -75,6 +88,9 @@ public class EmrSearchService {
         }
     }
 
+    /**
+     * Searches EMR documents by exact patient ID match using a term query.
+     */
     public List<EmrDocument> searchByPatient(String patientId) {
         try {
             String body = """

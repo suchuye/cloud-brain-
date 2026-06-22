@@ -3,6 +3,11 @@ package com.cloudbrain.imaging.domain.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * Domain entity representing an AI-generated radiology report.
+ * <p>Carries structured findings (JSON), quantitative measurements (JSON),
+ * a textual impression, and a critical-warning flag for urgent results.</p>
+ */
 @Entity
 @Table(name = "ai_report")
 public class AiReport {

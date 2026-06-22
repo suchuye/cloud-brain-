@@ -9,6 +9,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * 认证服务安全配置。
+ * 放行 /auth/** 和 /actuator/**，其余需要认证。
+ * 使用无状态会话 + BCrypt 密码编码。
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

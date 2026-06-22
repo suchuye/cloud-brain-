@@ -12,6 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Application service for doctor schedule management and patient queue operations.
+ * Coordinates domain entities with persistence and publishes queue change events via the outbox.
+ */
 @Service
 public class SchedulingService {
 
@@ -29,18 +33,27 @@ public class SchedulingService {
 
     // ===== 排班 =====
 
+    /**
+     * Creates a new doctor schedule for a given date and time slot.
+     */
     public Schedule createSchedule(CreateScheduleRequest req) {
         Schedule schedule = new Schedule(req.doctorId(), req.doctorName(), req.departmentId(),
                 req.date(), req.startTime(), req.endTime(), req.maxPatients());
         return scheduleRepository.save(schedule);
     }
 
+    /**
+     * Retrieves a doctor's schedules for a specific date.
+     */
     public List<Schedule> getDoctorSchedules(String doctorId, java.time.LocalDate date) {
         return scheduleRepository.findByDoctorIdAndDate(doctorId, date);
     }
 
     // ===== 队列 =====
 
+    /**
+     * Adds a patient to the doctor's queue with auto-incremented queue number.
+     */
     @Transactional
     public Queue addToQueue(AddToQueueRequest req) {
         // 分配序号
@@ -53,6 +66,9 @@ public class SchedulingService {
         return queueRepository.save(queue);
     }
 
+    /**
+     * Marks a queue entry as checked in (transitions from WAITING to IN_QUEUE).
+     */
     @Transactional
     public Queue checkIn(String queueId) {
         Queue queue = queueRepository.findById(queueId).orElseThrow(() -> new RuntimeException("Queue not found"));
@@ -62,6 +78,9 @@ public class SchedulingService {
         return queue;
     }
 
+    /**
+     * Calls the next waiting patient into consultation (transitions to IN_CONSULTATION).
+     */
     @Transactional
     public Queue callNext(String doctorId) {
         Queue next = queueRepository.findTopByDoctorIdAndStatusOrderByQueueNumberAsc(
@@ -74,6 +93,9 @@ public class SchedulingService {
         return next;
     }
 
+    /**
+     * Completes a patient's consultation (transitions to COMPLETED).
+     */
     @Transactional
     public void completeConsultation(String queueId) {
         Queue queue = queueRepository.findById(queueId).orElseThrow(() -> new RuntimeException("Queue not found"));
@@ -82,6 +104,9 @@ public class SchedulingService {
         publishQueueEvent(queue, "COMPLETE");
     }
 
+    /**
+     * Marks a patient as passed (did not attend when called).
+     */
     @Transactional
     public void passPatient(String queueId) {
         Queue queue = queueRepository.findById(queueId).orElseThrow(() -> new RuntimeException("Queue not found"));
@@ -90,6 +115,9 @@ public class SchedulingService {
         publishQueueEvent(queue, "PASS");
     }
 
+    /**
+     * Cancels a queue entry from any non-completed status.
+     */
     @Transactional
     public void cancel(String queueId) {
         Queue queue = queueRepository.findById(queueId).orElseThrow(() -> new RuntimeException("Queue not found"));
@@ -98,6 +126,9 @@ public class SchedulingService {
         publishQueueEvent(queue, "CANCEL");
     }
 
+    /**
+     * Returns the current waiting queue for a doctor, ordered by queue number.
+     */
     public List<Queue> getDoctorQueue(String doctorId) {
         return queueRepository.findByDoctorIdAndStatusOrderByQueueNumberAsc(
                 doctorId, com.cloudbrain.scheduling.domain.vo.QueueStatus.IN_QUEUE);

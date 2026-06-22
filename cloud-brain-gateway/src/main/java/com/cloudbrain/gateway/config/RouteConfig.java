@@ -5,6 +5,11 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Gateway routing configuration.
+ * Maps incoming path patterns to downstream microservices registered in the
+ * service discovery (load-balanced via the {@code lb://} prefix).
+ */
 @Configuration
 public class RouteConfig {
 

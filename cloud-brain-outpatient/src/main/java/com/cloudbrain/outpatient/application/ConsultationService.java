@@ -9,6 +9,10 @@ import com.cloudbrain.shared.event.ConsultationFinishedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Application service orchestrating consultation lifecycle operations.
+ * Coordinates domain entities, persistence, and integration event publishing via the outbox.
+ */
 @Service
 public class ConsultationService {
 
@@ -21,6 +25,9 @@ public class ConsultationService {
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Starts a consultation by transitioning it to IN_PROGRESS and publishing a ConsultationStartedEvent.
+     */
     @Transactional
     public void startConsultation(StartConsultationRequest request) {
         Consultation consultation = consultationRepository.findById(request.consultationId())
@@ -36,6 +43,9 @@ public class ConsultationService {
                 consultation.getPatientInfo().getPatientId()));
     }
 
+    /**
+     * Finishes a consultation by transitioning it to FINISHED and publishing a ConsultationFinishedEvent.
+     */
     @Transactional
     public void finishConsultation(String consultationId) {
         Consultation consultation = consultationRepository.findById(consultationId)

@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * Doctor schedule entity defining available time slots and patient capacity for a given day.
+ */
 @Entity
 @Table(name = "schedule")
 public class Schedule {
@@ -38,8 +41,14 @@ public class Schedule {
         this.maxPatients = maxPatients;
     }
 
+    /**
+     * Returns true if the schedule still has remaining patient capacity.
+     */
     public boolean hasCapacity() { return currentPatients < maxPatients; }
 
+    /**
+     * Increments the patient count by one. Throws IllegalStateException if at capacity.
+     */
     public void incrementPatients() {
         if (!hasCapacity()) throw new IllegalStateException("No capacity");
         this.currentPatients++;

@@ -1,5 +1,9 @@
 package com.cloudbrain.outpatient.infrastructure.search;
 
+/**
+ * Elasticsearch document model representing an indexed EMR record.
+ * Contains searchable fields extracted from the raw JSON content (chief complaint, present illness).
+ */
 public class EmrDocument {
 
     private String id;

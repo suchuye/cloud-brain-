@@ -5,6 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * Kafka consumer handling cross-module events for the outpatient workflow.
+ * Listens for medical imaging reports, medical orders, and doctor scheduling changes.
+ */
 @Component
 public class EventConsumer {
 

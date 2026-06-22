@@ -5,6 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Outbox-based domain event publisher for the imaging service.
+ * <p>Serializes events to JSON and inserts them into the {@code imaging_outbox}
+ * table within the caller's transaction, ensuring exactly-once persistence
+ * alongside the aggregate write.</p>
+ */
 @Component
 public class ImagingEventPublisher {
 
@@ -16,6 +22,10 @@ public class ImagingEventPublisher {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Persists the given domain event to the outbox table.
+     * The event will be asynchronously forwarded to Kafka by the OutboxPoller.
+     */
     public void publish(DomainEvent event) {
         try {
             String payload = objectMapper.writeValueAsString(event);

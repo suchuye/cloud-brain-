@@ -7,6 +7,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Application service for LLM-based clinical inference.
+ * Selects the first available {@link LlmAdapter} at startup and uses it to perform
+ * diagnosis and summarization tasks. Falls back to a static response when the
+ * adapter returns no result.
+ */
 @Service
 public class LlmInferenceService {
 
@@ -22,6 +28,10 @@ public class LlmInferenceService {
         log.info("LLM provider: {}", adapter.getName());
     }
 
+    /**
+     * Generates a structured differential diagnosis based on the doctor-patient
+     * dialog history. Falls back to a static message if the LLM call fails.
+     */
     public String diagnose(String dialogHistory) {
         String system = """
                 你是资深临床医学专家。根据医生与患者的对话，提供：
@@ -36,6 +46,9 @@ public class LlmInferenceService {
         return result != null ? result : fallbackDiagnose(dialogHistory);
     }
 
+    /**
+     * Summarizes the doctor-patient dialog into a structured JSON medical record.
+     */
     public String summarize(String dialogHistory) {
         String system = "你是医疗记录助手，将门诊对话整理为JSON格式结构化摘要：";
         String prompt = "将以下对话生成病历摘要JSON：\n" + dialogHistory;

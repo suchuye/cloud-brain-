@@ -4,6 +4,10 @@ import com.cloudbrain.shared.enums.UserRole;
 import jakarta.persistence.*;
 import java.util.Set;
 
+/**
+ * 角色实体。
+ * 定义系统角色及其关联的权限集合（如 READ_EMR、ISSUE_ORDER、PRESCRIBE）。
+ */
 @Entity
 @Table(name = "role")
 public class Role {

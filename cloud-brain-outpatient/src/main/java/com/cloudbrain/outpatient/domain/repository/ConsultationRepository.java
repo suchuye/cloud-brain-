@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * JPA repository for the Consultation aggregate root.
+ * Provides query methods for finding consultations by doctor ID and status.
+ */
 public interface ConsultationRepository extends JpaRepository<Consultation, String> {
     List<Consultation> findByDoctorIdAndStatus(String doctorId, ConsultationStatus status);
     Optional<Consultation> findTopByDoctorIdAndStatusOrderByCreatedAtAsc(String doctorId, ConsultationStatus status);

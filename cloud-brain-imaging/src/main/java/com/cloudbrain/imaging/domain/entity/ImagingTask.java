@@ -4,6 +4,11 @@ import com.cloudbrain.imaging.domain.vo.ImagingTaskStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * Imaging task aggregate root with a processing state machine.
+ * <p>State machine: RECEIVED -> PREPROCESSING -> INFERRING -> COMPLETED.
+ * Failure is possible from any active state via {@link #fail(String)}.</p>
+ */
 @Entity
 @Table(name = "imaging_task")
 public class ImagingTask {
@@ -41,23 +46,27 @@ public class ImagingTask {
         this.fileMd5 = fileMd5;
     }
 
+    /** Transitions from RECEIVED to PREPROCESSING. Guards against invalid state. */
     public void startPreprocessing() {
         if (status != ImagingTaskStatus.RECEIVED) throw new IllegalStateException("Not received");
         status = ImagingTaskStatus.PREPROCESSING;
         updatedAt = Instant.now();
     }
 
+    /** Transitions from PREPROCESSING to INFERRING. Guards against skipping preprocessing. */
     public void startInference() {
         if (status != ImagingTaskStatus.PREPROCESSING) throw new IllegalStateException("Not preprocessed");
         status = ImagingTaskStatus.INFERRING;
         updatedAt = Instant.now();
     }
 
+    /** Marks the task as COMPLETED after successful processing. */
     public void complete() {
         status = ImagingTaskStatus.COMPLETED;
         updatedAt = Instant.now();
     }
 
+    /** Marks the task as FAILED with a descriptive error message. */
     public void fail(String message) {
         status = ImagingTaskStatus.FAILED;
         this.errorMessage = message;

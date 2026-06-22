@@ -6,6 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller exposing consultation lifecycle endpoints (start, finish).
+ * All endpoints require the DOCTOR role.
+ */
 @RestController
 @RequestMapping("/api/consultations")
 public class ConsultationController {

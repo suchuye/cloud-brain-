@@ -6,6 +6,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller exposing LLM inference endpoints.
+ * Provides diagnosis and summarization capabilities to front-end clients.
+ */
 @RestController
 @RequestMapping("/api/llm")
 public class LlmController {

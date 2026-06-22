@@ -10,6 +10,11 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Application service that orchestrates medical order submission.
+ * <p>Handles idempotent submission, order lifecycle transitions, and outbox-based
+ * event publishing within a single transactional boundary.</p>
+ */
 @Service
 public class OrderRoutingService {
 
@@ -21,6 +26,12 @@ public class OrderRoutingService {
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Submits a medical order idempotently. If a previous submission with the same
+     * idempotency key exists, returns the existing order without side effects.
+     * Otherwise creates the order, transitions it to ACCEPTED, persists the outbox
+     * event in the same transaction.
+     */
     @Transactional
     public SubmitOrderResponse submitOrder(SubmitOrderRequest request) {
         // Idempotency check

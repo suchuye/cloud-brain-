@@ -11,8 +11,13 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Map;
 
+/**
+ * JWT 令牌提供者。
+ * Access Token（15min）包含 userId/username/roles，
+ * Refresh Token（7天）仅包含 userId。
+ * 签名算法 HMAC-SHA256，密钥通过环境变量 JWT_SECRET 注入。
+ */
 @Component
 public class JwtProvider {
 
@@ -29,6 +34,7 @@ public class JwtProvider {
         this.refreshExpiration = refreshExpiration;
     }
 
+    /** 签发短期 Access Token */
     public String generateAccessToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()
@@ -41,6 +47,7 @@ public class JwtProvider {
                 .compact();
     }
 
+    /** 签发长期 Refresh Token */
     public String generateRefreshToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()
@@ -51,6 +58,10 @@ public class JwtProvider {
                 .compact();
     }
 
+    /**
+     * 校验 Refresh Token 签名和有效期。
+     * @return 有效则返回 userId，无效则抛异常
+     */
     public String validateRefreshToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(key)

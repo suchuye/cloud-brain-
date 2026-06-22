@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST controller for EMR CRUD operations and full-text search.
+ */
 @RestController
 @RequestMapping("/api/emr")
 public class EmrController {

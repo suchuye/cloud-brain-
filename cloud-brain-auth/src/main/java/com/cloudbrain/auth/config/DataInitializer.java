@@ -11,6 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
+/**
+ * 开发环境数据初始化。
+ * 首次启动时自动创建默认角色（Doctor/Patient/Admin）和测试医生账户 doctor1。
+ * 已存在数据时跳过（幂等）。
+ */
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -25,6 +30,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // 幂等：已有角色数据则跳过
         if ((long) em.createQuery("SELECT COUNT(r) FROM Role r").getSingleResult() > 0) {
             return;
         }
@@ -39,7 +45,5 @@ public class DataInitializer implements CommandLineRunner {
         User doctor = new User("doctor1", passwordEncoder.encode("test123"), "张医生",
                 Set.of(UserRole.DOCTOR), "DEPT-001");
         em.persist(doctor);
-
-        System.out.println("=== Test user created: doctor1 / test123 ===");
     }
 }

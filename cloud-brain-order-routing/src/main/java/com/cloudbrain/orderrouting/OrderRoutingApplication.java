@@ -11,6 +11,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.kafka.annotation.EnableKafka;
 
+/**
+ * Spring Boot entry point for the order-routing microservice.
+ * <p>Coordinates the submission, validation, and routing of medical orders across
+ * the cloud-brain platform.</p>
+ */
 @EnableScheduling
 @SpringBootApplication
 @EnableDiscoveryClient

@@ -16,11 +16,21 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+/**
+ * Spring Security configuration for the order-routing service.
+ * <p>Enforces JWT-based authentication in production and permissive access in
+ * development profiles. Uses stateless session management throughout.</p>
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * Configures the security filter chain with profile-aware authorization.
+     * In prod, all endpoints except /actuator/** require a valid JWT.
+     * In non-prod profiles, all requests are permitted.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, Environment env) throws Exception {
         boolean isProd = Arrays.asList(env.getActiveProfiles()).contains("prod");
@@ -40,6 +50,10 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Provides a JwtDecoder backed by an HMAC-SHA256 shared secret.
+     * Falls back to a development-only default key when JWT_SECRET is unset.
+     */
     @Bean
     public JwtDecoder jwtDecoder() {
         String secret = System.getenv().getOrDefault("JWT_SECRET", "cloud-brain-platform-secret-key-min-256-bits!!");

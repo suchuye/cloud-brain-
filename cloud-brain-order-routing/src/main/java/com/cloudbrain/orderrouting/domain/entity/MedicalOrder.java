@@ -4,6 +4,11 @@ import com.cloudbrain.shared.enums.OrderStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * Medical order aggregate root.
+ * <p>State machine: PENDING -> ACCEPTED -> ROUTED -> COMPLETED.
+ * Rejection is allowed from any non-final state.</p>
+ */
 @Entity
 @Table(name = "medical_order")
 public class MedicalOrder {
@@ -38,6 +43,7 @@ public class MedicalOrder {
         this.orderDetails = orderDetails;
     }
 
+    /** Transitions from PENDING to ACCEPTED. Rejects if already processed. */
     public void accept() {
         if (this.status != OrderStatus.PENDING) {
             throw new IllegalStateException("Order already processed");
@@ -45,6 +51,7 @@ public class MedicalOrder {
         this.status = OrderStatus.ACCEPTED;
     }
 
+    /** Transitions from ACCEPTED to ROUTED. Ensures order was accepted first. */
     public void route() {
         if (this.status != OrderStatus.ACCEPTED) {
             throw new IllegalStateException("Order must be accepted before routing");
@@ -52,7 +59,10 @@ public class MedicalOrder {
         this.status = OrderStatus.ROUTED;
     }
 
+    /** Marks the order as completed. */
     public void complete() { this.status = OrderStatus.COMPLETED; }
+
+    /** Marks the order as rejected with the given reason. */
     public void reject(String reason) { this.status = OrderStatus.REJECTED; }
 
     public String getId() { return id; }

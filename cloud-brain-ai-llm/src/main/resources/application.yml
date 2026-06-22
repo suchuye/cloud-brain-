@@ -9,7 +9,7 @@ ai:
   llm:
     provider: ${AI_PROVIDER:openai}
     openai:
-      api-key: ${AI_API_KEY}
+      api-key: ${AI_API_KEY:}
       base-url: ${AI_BASE_URL:https://api.deepseek.com}
       model: ${AI_MODEL:deepseek-chat}
 

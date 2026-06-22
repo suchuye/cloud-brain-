@@ -2,10 +2,12 @@ package com.cloudbrain.aiassistant.interfaces.ws;
 
 import com.cloudbrain.aiassistant.application.AiAssistantService;
 import com.cloudbrain.aiassistant.domain.entity.DiagnosticSession;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.util.Map;
 
@@ -24,7 +26,7 @@ public class AiAssistantWebSocketHandler {
     @MessageMapping("/start-session")
     @SendTo("/topic/session")
     public DiagnosticSession startSession(Map<String, String> request) {
-        return aiService.startSession(
+        return aiService.getOrCreateSession(
                 request.get("consultationId"),
                 request.get("doctorId"));
     }
@@ -35,7 +37,6 @@ public class AiAssistantWebSocketHandler {
         String text = msg.get("text");
         String suggestion = aiService.processText(sessionId, text);
 
-        // 推送回同一个 session 的订阅
         messagingTemplate.convertAndSend("/topic/suggestion/" + sessionId,
                 Map.of("text", suggestion));
     }
@@ -44,5 +45,13 @@ public class AiAssistantWebSocketHandler {
     @SendTo("/topic/session")
     public DiagnosticSession endSession(Map<String, String> msg) {
         return aiService.endSession(msg.get("sessionId"));
+    }
+
+    @EventListener
+    public void onDisconnect(SessionDisconnectEvent event) {
+        String sessionId = event.getSessionId();
+        if (sessionId != null) {
+            aiService.markDisconnected(sessionId);
+        }
     }
 }

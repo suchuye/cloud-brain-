@@ -1,6 +1,8 @@
 package com.cloudbrain.aiassistant.infrastructure.messaging;
 
 import com.cloudbrain.aiassistant.application.AiAssistantService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -11,6 +13,7 @@ public class EventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(EventConsumer.class);
     private final AiAssistantService aiService;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public EventConsumer(AiAssistantService aiService) {
         this.aiService = aiService;
@@ -18,32 +21,18 @@ public class EventConsumer {
 
     @KafkaListener(topics = "outpatient-consultation-events", groupId = "ai-assistant")
     public void onConsultationStarted(String message) {
-        log.info("👂 接诊开始，初始化 AI 会话: {}", truncate(message));
-
+        log.info("Received consultation event: {}", truncate(message));
         try {
-            // 从消息中提取 consultationId, doctorId（简化处理）
-            String consultationId = extractField(message, "consultationId");
-            String doctorId = extractField(message, "doctorId");
+            JsonNode root = mapper.readTree(message);
+            String consultationId = root.path("consultationId").asText(null);
+            String doctorId = root.path("doctorId").asText(null);
             if (consultationId != null && doctorId != null) {
-                aiService.startSession(consultationId, doctorId);
-                log.info("✅ AI 会话已就绪: consultation={}", consultationId);
+                aiService.getOrCreateSession(consultationId, doctorId);
+                log.info("AI session ready: consultation={}", consultationId);
             }
         } catch (Exception e) {
-            log.warn("初始化 AI 会话失败，等待 WebSocket 手动触发", e);
+            log.warn("Failed to init AI session from Kafka, will be created on WebSocket connect", e);
         }
-    }
-
-    private String extractField(String json, String field) {
-        int start = json.indexOf("\"" + field + "\"");
-        if (start < 0) return null;
-        start = json.indexOf(":", start) + 1;
-        while (start < json.length() && json.charAt(start) == ' ') start++;
-        if (json.charAt(start) == '"') {
-            start++;
-            int end = json.indexOf("\"", start);
-            return end > start ? json.substring(start, end) : null;
-        }
-        return null;
     }
 
     private String truncate(String msg) {

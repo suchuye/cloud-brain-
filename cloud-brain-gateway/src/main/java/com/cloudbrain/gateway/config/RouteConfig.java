@@ -27,8 +27,7 @@ public class RouteConfig {
                         .uri("http://localhost:8087"))
                 .route("admin", r -> r.path("/api/admin/**")
                         .uri("http://localhost:8088"))
-                .route("ai-llm", r -> r.path("/api/llm/**")
-                        .uri("http://localhost:8089"))
+                // ai-llm is an internal service, not exposed through gateway
                 .build();
     }
 }
